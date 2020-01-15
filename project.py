@@ -2,19 +2,18 @@ import pygame
 import sys
 import os
 import random
+import time
 
 pygame.init()
-size = width, height = 800, 600
+size = width, height = 825, 490
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 
 
 all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
 
 
-class AnimatedSprite(pygame.sprite.Sprite):
+class Birds(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows, x, y):
         super().__init__(all_sprites)
         self.frames = []
@@ -39,7 +38,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
         self.image = self.frames[self.cur_frame]
 
 
-class Bomb(pygame.sprite.Sprite):
+class Explosion(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows, x, y):
         super().__init__(all_sprites)
         self.frames = []
@@ -74,18 +73,41 @@ def load_image(name, colorkey=None):
     return image
 
 
-bluebird = AnimatedSprite(load_image('bird_blue.png', -1), 3, 3, 50, 150)
-boom = Bomb(load_image('babah2.png', -1), 15, 1, 400, 150)
+aim = pygame.transform.scale(load_image('aim.jpg', -1), (75, 75))
+bluebird = Birds(load_image('bird_blue.png', -1), 3, 3, 50, 150)
+explosion = Explosion(load_image('explosion.png', -1), 15, 1, 400, 150)
+x = 375
+y = 207
 running = True
+motion = ''
 while running:
+    screen.fill((255, 0, 255))
+    all_sprites.draw(screen)
+    all_sprites.update()
+    screen.blit(aim, (x, y))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
-    all_sprites.update()
-    screen.fill((0, 0, 0))
-    all_sprites.draw(screen)
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                motion = 'left'
+            if event.key == pygame.K_RIGHT:
+                motion = 'right'
+            if event.key == pygame.K_UP:
+                motion = 'up'
+            if event.key == pygame.K_DOWN:
+                motion = 'down'
+        if event.type == pygame.KEYUP:
+            motion = 'stop'
+    if motion == 'left' and x > 0:
+        x -= 30
+    if motion == 'right' and x < 750:
+        x += 30
+    if motion == 'up' and y > 0:
+        y -= 30
+    if motion == 'down' and y < 415:
+        y += 30
     pygame.display.flip()
-    clock.tick(10)
+    clock.tick(15)
 
 pygame.quit()
