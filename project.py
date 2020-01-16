@@ -14,13 +14,18 @@ all_sprites = pygame.sprite.Group()
 
 
 class Birds(pygame.sprite.Sprite):
-    def __init__(self, sheet, columns, rows, x, y):
+    def __init__(self, sheet, columns, rows):
         super().__init__(all_sprites)
-        self.frames = []
-        self.cut_sheet(sheet, columns, rows)
-        self.cur_frame = 0
-        self.image = self.frames[self.cur_frame]
-        self.rect = self.rect.move(x, y)
+        self.kol = 15
+        while self.kol > 0:
+            self.frames = []
+            self.cut_sheet(sheet, columns, rows)
+            self.cur_frame = 0
+            self.image = self.frames[self.cur_frame]
+            self.rect = self.rect.move(random.choice((0, 600)), random.choice(range(450)))
+            print(self.rect)
+            self.kol -= 1
+            pygame.display.flip()
 
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
@@ -73,9 +78,12 @@ def load_image(name, colorkey=None):
     return image
 
 
-aim = pygame.transform.scale(load_image('aim.jpg', -1), (75, 75))
-bluebird = Birds(load_image('bird_blue.png', -1), 3, 3, 50, 150)
-explosion = Explosion(load_image('explosion.png', -1), 15, 1, 400, 150)
+kol = 15
+aim = pygame.transform.scale(load_image('aim.jpg', -1), (40, 40))
+bird = pygame.transform.scale(load_image('bird_blue.png', -1), (170, 150))
+bird = Birds(bird, 3, 3)
+explosion = pygame.transform.scale(load_image('explosion.png', -1), (710, 60))
+explosion = Explosion(explosion, 15, 1, 400, 150)
 x = 375
 y = 207
 running = True
@@ -111,3 +119,4 @@ while running:
     clock.tick(15)
 
 pygame.quit()
+>>>>>>> Stashed changes
