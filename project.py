@@ -25,7 +25,7 @@ class Birds(pygame.sprite.Sprite):
         self.cur_frame = 0
         self.image = self.frames[self.cur_frame]
         self.rect = self.rect.move(x, y)
-        if x == -170:
+        if x < -58:
             self.c = 0
         else:
             self.c = 1
@@ -35,9 +35,7 @@ class Birds(pygame.sprite.Sprite):
                                 sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
-                if j == 2 and i == 2 and self.c == 1:
-                    break
-                if j == 2 and i == 0 and self.c == 0:
+                if j == 2 and i == 2:
                     break
                 frame_location = (self.rect.w * i, self.rect.h * j)
                 self.frames.append(sheet.subsurface(pygame.Rect(
@@ -46,11 +44,26 @@ class Birds(pygame.sprite.Sprite):
     def update(self):
         global bird_iter
         bird_iter += 1
-        if bird_iter % 5 == 0:
+        if self.c == 0 and self.rect[0] == 825:
+            self.image = pygame.transform.flip(self.frames[self.cur_frame], True, False)
+            self.c = 1
+        if self.c == 1 and self.rect[0] == -59:
+            self.image = pygame.transform.flip(self.frames[self.cur_frame], True, False)
+            self.c = 0
+        if bird_iter % 4 == 0:
             self.cur_frame = (self.cur_frame + 1) % len(self.frames)
-            self.image = self.frames[self.cur_frame]
+            if self.c == 0:
+                self.image = pygame.transform.flip(self.frames[self.cur_frame], True, False)
+            else:
+                self.image = self.frames[self.cur_frame]
         if bird_iter > 50:
             bird_iter = 0
+        if self.c == 0:
+            if bird_iter % random.choice(range(1, 2)) == 0:
+                self.rect = self.rect.move(1, 0)
+        else:
+            if bird_iter % random.choice(range(1, 2)) == 0:
+                self.rect = self.rect.move(-1, 0)
 
 
 class Explosion(pygame.sprite.Sprite):
@@ -93,15 +106,23 @@ def load_image(name, colorkey=None):
     return image
 
 
-kol = 15
+
 aim = pygame.transform.scale(load_image('aim.jpg', -1), (40, 40))
-while kol > 0:
-    bird = pygame.transform.scale(load_image('bird_blue.png', -1), (170, 150))
-    x, y = random.choice((-170, 825)), random.choice(range(450))
-    if x == -170:
-        bird = pygame.transform.flip(bird, True, False)
-    Birds(bird, 3, 3, x, y)
-    kol -= 1
+kol = 20
+
+
+def creature_bird():
+    global kol
+    if kol > 0:
+        bird = pygame.transform.scale(load_image('bird_blue.png', -1), (170, 150))
+        if kol % 2 == 0:
+            x, y = random.choice(range(-508, -58)), random.choice(range(450))
+        else:
+            x, y = random.choice(range(825, 1275)), random.choice(range(450))
+        Birds(bird, 3, 3, x, y)
+        kol -= 1
+
+
 explosion = pygame.transform.scale(load_image('explosion.png', -1), (530, 50))
 explosion = Explosion(explosion, 15, 1, 300, 150)
 x = 375
@@ -110,6 +131,7 @@ running = True
 motion = ''
 while running:
     screen.fill((130, 0, 255))
+    creature_bird()
     birds_sprites.draw(screen)
     explosion_sprites.draw(screen)
     birds_sprites.update()
