@@ -8,6 +8,7 @@ pygame.init()
 size = width, height = 825, 550
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
+pygame.display.set_caption('ОХОТА НА ПТИЧЕК')
 
 birds_sprites = pygame.sprite.Group()
 explosion_sprites = pygame.sprite.Group()
@@ -154,8 +155,8 @@ def creature_bird():
 def game_over():
     while True:
         screen.blit(sky, (0, 0))
-        the_end = pygame.font.Font(None, 56).render("Игра окончена!", 1, (0, 0, 255))
-        new_game = pygame.font.Font(None, 26).render('Чтобы начать новую игру, нажмите "пробел"', 1, (0, 0, 255))
+        the_end = pygame.font.Font(None, 56).render("Игра окончена!", 1, (0, 56, 65))
+        new_game = pygame.font.Font(None, 26).render('Чтобы начать новую игру, нажмите "пробел"', 1, (0, 56, 65))
         screen.blit(new_game, (243, 300))
         screen.blit(the_end, (283, 250))
         for event in pygame.event.get():
@@ -167,11 +168,62 @@ def game_over():
         pygame.display.flip()
 
 
+class Menu:
+    def __init__(self, punkts=[120, 140, u'Punkt', (250, 250, 30), (224, 176, 255)]):
+        self.punkts = punkts
+
+    def render(self, poverh, font, num_punkt):
+        for i in self.punkts:
+            if num_punkt == i[5]:
+                poverh.blit(font.render(i[2], 1, i[4]), (i[0], i[1]))
+            else:
+                poverh.blit(font.render(i[2], 1, i[3]), (i[0], i[1]))
+
+    def menu(self):
+        done = True
+        pygame.font.init()
+        menu_font = pygame.font.SysFont('Comic Sana MS', 100)
+        punkt = 0
+        while done:
+            screen.fill((204, 235, 255))
+            mp = pygame.mouse.get_pos()
+            for i in self.punkts:
+                if mp[0] > i[0] and mp[0] < i[0] + 155 and mp[1] > i[1] and mp[1] < i[1] + 50:
+                    punkt = i[5]
+            self.render(screen, menu_font, punkt)
+
+            for e in pygame.event.get():
+                if e.type == pygame.QUIT:
+                    sys.exit()
+                if e.type == pygame.KEYDOWN:
+                    if e.key == pygame.K_ESCAPE:
+                        sys.exit()
+                    if e.key == pygame.K_UP:
+                        if punkt > 0:
+                            punkt -= 1
+                    if e.key == pygame.K_DOWN:
+                        if punkt < len(self.punkts) - 1:
+                            punkt += 1
+                if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                    if punkt == 0:
+                        done = False
+                    elif punkt == 1:
+                        sys.exit()
+            screen.blit(screen, (0, 0))
+            pygame.display.flip()
+
+
+punkts = [(120, 140, u'ИГРАТЬ', (184, 121, 175), (51, 3, 66), 0),
+          (130, 210, u'ВЫХОД', (184, 121, 175), (51, 3, 66), 1)]
+game = Menu(punkts)
+game.menu()
+
+
 def start_screen():
     while True:
         screen.blit(sky, (0, 0))
-        screen.fill((224, 146, 67), pygame.Rect(0, 490, 825, 60))
-        new_game = pygame.font.Font(None, 26).render('Чтобы начать игру, нажмите "пробел"', 1, (0, 0, 255))
+        screen.fill((166, 189, 215), pygame.Rect(0, 490, 825, 60))
+        new_game = pygame.font.Font(None, 26).render('Чтобы начать игру, нажмите "пробел"', 1, (0, 56, 65))
         screen.blit(new_game, (243, 300))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -185,7 +237,7 @@ def start_screen():
 running = True
 motion = ''
 killed_birds = 0
-start_screen()
+
 while running:
     v = False
     if time1 >= -1:
@@ -200,12 +252,16 @@ while running:
             con.commit()
             con.close()
         game_over()
+        punkts = [(120, 140, u'ИГРАТЬ', (184, 121, 175), (51, 3, 66), 0),
+                  (130, 210, u'ВЫХОД', (184, 121, 175), (51, 3, 66), 1)]
+        game = Menu(punkts)
+        game.menu()
         time1 = 60
         birds_sprites.empty()
         kol = 20
         killed_birds = 0
     screen.blit(sky, (0, 0))
-    screen.fill((224, 146, 67), pygame.Rect(0, 490, 825, 60))
+    screen.fill((166, 189, 215), pygame.Rect(0, 490, 825, 60))
     f1 = pygame.font.Font(None, 36)
     text1 = f1.render(str(killed_birds), 1, (0, 0, 0))
     screen.blit(text1, (250, 505))
@@ -219,6 +275,7 @@ while running:
     screen.blit(best, (510, 505))
     text5 = f1.render(str(best_result[0][0]), 1, (0, 0, 0))
     screen.blit(text5, (750, 505))
+
     creature_bird()
     birds_sprites.draw(screen)
     explosion_sprites.draw(screen)
