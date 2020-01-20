@@ -9,7 +9,6 @@ size = width, height = 825, 550
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 
-
 birds_sprites = pygame.sprite.Group()
 explosion_sprites = pygame.sprite.Group()
 aim_sprite = pygame.sprite.Group()
@@ -74,7 +73,6 @@ class Birds(pygame.sprite.Sprite):
             killed_birds += 1
 
 
-
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows, x, y):
         super().__init__(explosion_sprites)
@@ -118,7 +116,6 @@ def load_image(name, colorkey=None):
     else:
         image = image.convert_alpha()
     return image
-
 
 
 aim_img = pygame.transform.scale(load_image('aim.jpg', -1), (40, 40))
@@ -222,8 +219,6 @@ while running:
     screen.blit(best, (510, 505))
     text5 = f1.render(str(best_result[0][0]), 1, (0, 0, 0))
     screen.blit(text5, (750, 505))
-
-
     creature_bird()
     birds_sprites.draw(screen)
     explosion_sprites.draw(screen)
