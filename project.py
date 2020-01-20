@@ -2,10 +2,10 @@ import pygame
 import sys
 import os
 import random
-import time
+import sqlite3
 
 pygame.init()
-size = width, height = 825, 490
+size = width, height = 825, 550
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 
@@ -43,7 +43,7 @@ class Birds(pygame.sprite.Sprite):
                     frame_location, self.rect.size)))
 
     def update(self):
-        global bird_iter, kol
+        global bird_iter, kol, killed_birds
         bird_iter += 1
         if self.c == 0 and self.rect[0] == 825:
             self.image = pygame.transform.flip(self.frames[self.cur_frame], True, False)
@@ -71,6 +71,8 @@ class Birds(pygame.sprite.Sprite):
             Explosion(explosion, 15, 1, self.rect[0], self.rect[1])
             self.kill()
             kol += 1
+            killed_birds += 1
+
 
 
 class Explosion(pygame.sprite.Sprite):
@@ -126,6 +128,18 @@ aim.rect = aim.image.get_rect()
 aim.rect.x = 375
 aim.rect.y = 207
 kol = 20
+time1 = 60
+con = sqlite3.connect('records.db')
+cur = con.cursor()
+best_result = cur.execute("""SELECT best_result FROM best_results""").fetchall()
+con.close()
+explosion = pygame.transform.scale(load_image('explosion.png', -1), (530, 50))
+sky = pygame.transform.scale(load_image('sky.jpg'), (825, 490))
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
 
 
 def creature_bird():
@@ -133,19 +147,83 @@ def creature_bird():
     if kol > 0:
         bird = pygame.transform.scale(load_image('bird_blue.png', -1), (170, 150))
         if kol % 2 == 0:
-            x, y = random.choice(range(-508, -58)), random.choice(range(450))
+            x, y = random.choice(range(-508, -58)), random.choice(range(440))
         else:
-            x, y = random.choice(range(825, 1275)), random.choice(range(450))
+            x, y = random.choice(range(825, 1275)), random.choice(range(440))
         Birds(bird, 3, 3, x, y)
         kol -= 1
 
 
-explosion = pygame.transform.scale(load_image('explosion.png', -1), (530, 50))
+def game_over():
+    while True:
+        screen.blit(sky, (0, 0))
+        the_end = pygame.font.Font(None, 56).render("Игра окончена!", 1, (0, 0, 255))
+        new_game = pygame.font.Font(None, 26).render('Чтобы начать новую игру, нажмите "пробел"', 1, (0, 0, 255))
+        screen.blit(new_game, (243, 300))
+        screen.blit(the_end, (283, 250))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    return
+        pygame.display.flip()
+
+
+def start_screen():
+    while True:
+        screen.blit(sky, (0, 0))
+        screen.fill((224, 146, 67), pygame.Rect(0, 490, 825, 60))
+        new_game = pygame.font.Font(None, 26).render('Чтобы начать игру, нажмите "пробел"', 1, (0, 0, 255))
+        screen.blit(new_game, (243, 300))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    return
+        pygame.display.flip()
+
+
 running = True
 motion = ''
+killed_birds = 0
+start_screen()
 while running:
     v = False
-    screen.fill((130, 0, 255))
+    if time1 >= -1:
+        time1 -= 1 / 70
+    if int(time1) == 0 and time1 < 0:
+        if best_result[0][0] < killed_birds:
+            con = sqlite3.connect('records.db')
+            cur = con.cursor()
+            inquiry = 'UPDATE best_results SET best_result = ' + str(killed_birds)
+            best_result = cur.execute(inquiry).fetchall()
+            best_result = cur.execute("""SELECT best_result FROM best_results""").fetchall()
+            con.commit()
+            con.close()
+        game_over()
+        time1 = 60
+        birds_sprites.empty()
+        kol = 20
+        killed_birds = 0
+    screen.blit(sky, (0, 0))
+    screen.fill((224, 146, 67), pygame.Rect(0, 490, 825, 60))
+    f1 = pygame.font.Font(None, 36)
+    text1 = f1.render(str(killed_birds), 1, (0, 0, 0))
+    screen.blit(text1, (250, 505))
+    text2 = f1.render('Количество птичек:', 1, (0, 0, 0))
+    screen.blit(text2, (5, 505))
+    text3 = f1.render('Время:', 1, (0, 0, 0))
+    screen.blit(text3, (350, 505))
+    text4 = f1.render(str(int(time1)), 1, (0, 0, 0))
+    screen.blit(text4, (440, 505))
+    best = f1.render('Лучший результат:', 1, (0, 0, 0))
+    screen.blit(best, (510, 505))
+    text5 = f1.render(str(best_result[0][0]), 1, (0, 0, 0))
+    screen.blit(text5, (750, 505))
+
+
     creature_bird()
     birds_sprites.draw(screen)
     explosion_sprites.draw(screen)
@@ -175,7 +253,7 @@ while running:
         aim.rect = aim.rect.move(5, 0)
     if motion == 'up' and aim.rect[1] > 0:
         aim.rect = aim.rect.move(0, -5)
-    if motion == 'down' and aim.rect[1] < 415:
+    if motion == 'down' and aim.rect[1] < 448:
         aim.rect = aim.rect.move(0, 5)
 
     pygame.display.flip()
